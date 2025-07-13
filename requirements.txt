@@ -1,0 +1,4 @@
+streamlit==1.46.0
+pymupdf==1.23.22
+plotly==5.22.0
+fpdf==1.7.2
