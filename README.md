@@ -1,2 +1,58 @@
-# -PathFinder-AI
-PathFinder AI is a web-based career assistant that analyzes student resumes and provides personalized career guidance using AI logic. It suggests suitable paths (like GATE, job, MBA, etc.), grades resumes, offers improvement tips, and even includes a chatbot for career-related queries — all in a clean, interactive, and mobile-friendly UI.
+# 🧠 PathFinder AI — Smart Career Assistant
+
+As a 3rd-year engineering student, I was often unsure about what’s next — GATE, MBA, job?  
+So I built **PathFinder AI** to help students like me explore the right career path using AI.
+
+---
+
+## 🚀 Features
+
+- 📄 Upload your resume (PDF)
+- 🧭 Get AI-powered career suggestions
+- 📊 Visualize your fit across multiple domains
+- 🤖 Ask PathBot career-related questions
+- 📥 Download a personalized career report
+- 🎮 Gamified experience (badges like “Career Guru”)
+
+---
+
+## 📺 Demo
+
+🎬 [Watch the demo](demo.mp4)
+
+---
+
+## 🛠 Built With
+
+- **Python** & **Streamlit** – Web application framework  
+- **Plotly** – For interactive charts  
+- **PyMuPDF (fitz)** – Extract resume content  
+- **fpdf** – Generate custom PDF reports  
+- **Custom AI logic** – Rule-based suggestions + chatbot
+
+---
+
+🙌 Feedback Welcome
+This project was born out of confusion — and curiosity.
+If you're a student, mentor, or recruiter, I'd love to hear your thoughts!
+
+
+---
+## 💻 Run Locally
+
+```bash
+git clone https://github.com/YOUR_USERNAME/pathfinder-ai.git
+cd pathfinder-ai
+pip install -r requirements.txt
+streamlit run app.py
+Make sure you’re using Python 3.8+ and have streamlit, pymupdf, fpdf, and plotly installed.
+
+--
+
+🙌 Feedback Welcome
+This project was born out of confusion — and curiosity.
+If you're a student, mentor, or recruiter, I'd love to hear your thoughts!
+
+💬 Let me know what you think — always open to suggestions and improvements 😊
+
+#AI #Python #Streamlit #CareerTool #StudentBuilt #PathFinderAI
