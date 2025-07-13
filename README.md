@@ -18,7 +18,7 @@ So I built **PathFinder AI** to help students like me explore the right career p
 
 ## 📺 Demo
 
-🎬 [Watch the demo](demo.mp4)
+🎬 [Watch the demo on Google Drive](https://drive.google.com/file/d/14r2YWzaudQTXRFLgri6xnlC1S59Hom1R/view?usp=sharing)
 
 ---
 
