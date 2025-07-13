@@ -20,6 +20,10 @@ So I built **PathFinder AI** to help students like me explore the right career p
 
 🎬 [Watch the demo on Google Drive](https://drive.google.com/file/d/1Y9RWY4LGf191zpqyT4xAU3-V327YgV6e/view?usp=sharing)
 
+## 🌐 Live App
+
+🚀 [Click here to try PathFinder AI live](https://janhvi9101-pathfinder-ai.streamlit.app/)
+
 ---
 
 ## 🛠 Built With
