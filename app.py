@@ -39,7 +39,7 @@ st.markdown("""
 # ✅ Header with subtle background
 title_html = """
     <div style='background-color: #f5f5f5; padding: 20px; border-radius: 12px; text-align: center;'>
-        <h1 style='color: #2b6777;'>🧠 PathFinder AI - Your Smart Career Assistant</h1>
+        <h1 style='color: #2b6777;'>🚀 PathFinder AI - Your Smart Career Assistant</h1>
         <p style='color: #444;'>Your personalized AI that evaluates your resume, gives career advice, and helps you grow!</p>
     </div>
 """
