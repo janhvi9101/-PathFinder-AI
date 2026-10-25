@@ -32,7 +32,7 @@ PathFinder AI aims to address this problem by providing personalized career guid
 
 ## 🌐 Live App
 
-🚀 [Click here to try PathFinder AI live]([(https://janhvi9101-pathfinder-ai.streamlit.app/)])
+🚀 [Click here to try PathFinder AI live][(https://janhvi9101-pathfinder-ai.streamlit.app/)]
 
 ---
 
