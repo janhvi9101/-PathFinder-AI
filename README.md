@@ -1,18 +1,28 @@
-# 🧠 PathFinder AI — Smart Career Assistant
+# 🧠 PathFinder AI — Intelligent Career Guidance Agent
 
-As a 3rd-year engineering student, I was often unsure about what’s next — GATE, MBA, job?  
-So I built **PathFinder AI** to help students like me explore the right career path using AI.
+PathFinder AI is a rule-based intelligent career guidance application designed to help students explore suitable career opportunities based on their resumes, interests and skills.
+As an engineering student, I often wondered what to pursue next — GATE, MBA, placements, higher studies or entrepreneurship. This inspired me to develop PathFinder AI, a smart career assistant that helps students make more informed career decisions.
+The project demonstrates fundamental concepts of Artificial Intelligence Agent Development (AIAD) through resume analysis, rule-based reasoning, career recommendations, skill-gap identification and interactive guidance.
+
+---
+
+## 🎯 Problem Statement
+Engineering students often face difficulty selecting an appropriate career path due to limited guidance, uncertainty about their strengths and a lack of awareness of available opportunities.
+PathFinder AI aims to address this problem by providing personalized career guidance through an interactive web application.
 
 ---
 
 ## 🚀 Features
 
-- 📄 Upload your resume (PDF)
-- 🧭 Get AI-powered career suggestions
-- 📊 Visualize your fit across multiple domains
-- 🤖 Ask PathBot career-related questions
-- 📥 Download a personalized career report
-- 🎮 Gamified experience (badges like “Career Guru”)
+📄 PDF Resume Upload: Upload and extract information from a resume.
+🔍 Resume Analysis: Identify relevant skills, resume sections and improvement opportunities.
+🧭 Career Recommendations: Suggest suitable career paths using predefined decision-making rules.
+📊 Career-Fit Visualization: Compare compatibility across multiple career domains using interactive charts.
+🛠️ Skill-Gap Analysis: Identify skills students should develop for their recommended career.
+📚 Learning Resources: Recommend online resources for skill development.
+🤖 PathBot: Ask career-related questions and receive rule-based guidance.
+📥 PDF Career Report: Download personalized recommendations and resume improvement suggestions.
+🎮 Gamification: Earn badges such as Career Guru, Resume Hero, Learner and New Explorer.
 
 ---
 
