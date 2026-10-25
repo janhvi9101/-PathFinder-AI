@@ -28,7 +28,7 @@ PathFinder AI aims to address this problem by providing personalized career guid
 
 ## 📺 Demo
 
-🎬 [Watch the demo on Google Drive](https://drive.google.com/file/d/1Y9RWY4LGf191zpqyT4xAU3-V327YgV6e/view?usp=sharing)
+🎬 [Watch the demo on Google Drive](https://drive.google.com/file/d/1cMsaSpbWnn806HoNR-HnyqVWLJ19u-Gj/view?usp=sharing)
 
 ## 🌐 Live App
 
