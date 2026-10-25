@@ -1,4 +1,3 @@
-```python
 from fpdf import FPDF
 import re
 
