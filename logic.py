@@ -1,570 +1,367 @@
-from fpdf import FPDF
 import re
+from io import BytesIO
+from fpdf import FPDF
 
-
-# --------------------------------------------------
-# 1. CAREER KNOWLEDGE BASE
-# --------------------------------------------------
-
-CAREER_DATA = {
+CAREERS = {
     "Software Development": {
-        "interests": ["software", "startup", "research"],
-        "keywords": [
-            "python", "java", "c++", "programming", "developer",
-            "software", "web development", "javascript", "coding",
-            "html", "css", "git", "database", "sql"
-        ],
-        "required_skills": [
-            "Python", "Data Structures", "Git", "SQL"
-        ],
+        "interest": "Software",
+        "skills": ["Python", "Java", "SQL", "Git", "Problem Solving"],
         "tips": [
-            "Build practical software projects.",
-            "Contribute to open-source repositories.",
-            "Practice coding and problem-solving.",
-            "Create a portfolio of your projects."
+            "Build practical coding projects.",
+            "Practise programming and problem solving.",
+            "Maintain a GitHub portfolio."
         ]
     },
-
-    "MBA and Business Management": {
-        "interests": ["mba", "startup"],
-        "keywords": [
-            "management", "business", "marketing", "finance",
-            "leadership", "mba", "communication", "sales",
-            "analytics", "economics"
-        ],
-        "required_skills": [
-            "Communication", "Business Analytics",
-            "Financial Fundamentals"
-        ],
+    "Business Management": {
+        "interest": "MBA",
+        "skills": ["Communication", "Excel", "Leadership", "Presentation"],
         "tips": [
-            "Explore business case studies.",
-            "Develop communication and leadership skills.",
-            "Learn basic business analytics.",
+            "Improve communication and leadership skills.",
+            "Explore business-related internships.",
             "Research MBA entrance examinations."
         ]
     },
-
     "Research and Higher Studies": {
-        "interests": ["research", "abroad"],
-        "keywords": [
-            "research", "publication", "thesis", "machine learning",
-            "artificial intelligence", "data analysis", "laboratory",
-            "scientific", "academic"
-        ],
-        "required_skills": [
-            "Research Methodology", "Technical Writing",
-            "Data Analysis"
-        ],
+        "interest": "Research",
+        "skills": ["Python", "Research", "Data Analysis", "Writing"],
         "tips": [
-            "Explore research projects in your field.",
-            "Read relevant academic papers.",
-            "Develop technical writing skills.",
-            "Investigate postgraduate opportunities."
+            "Explore research papers.",
+            "Work on academic projects.",
+            "Research postgraduate opportunities."
         ]
     },
-
-    "Government and Competitive Examinations": {
-        "interests": ["government"],
-        "keywords": [
-            "government", "public service", "civil services",
-            "competitive examination", "gate", "public sector"
-        ],
-        "required_skills": [
-            "Aptitude", "Reasoning", "General Awareness"
-        ],
+    "Government Sector": {
+        "interest": "Government",
+        "skills": ["Aptitude", "Reasoning", "General Knowledge"],
         "tips": [
-            "Identify examinations relevant to your qualification.",
-            "Create a realistic study timetable.",
-            "Practice previous examination papers.",
-            "Track your mock-test performance."
+            "Select a suitable government examination.",
+            "Study its official syllabus.",
+            "Practise previous-year papers."
         ]
     },
-
-    "Data Analytics": {
-        "interests": ["software", "research", "mba"],
-        "keywords": [
-            "data analysis", "data analytics", "statistics",
-            "sql", "excel", "power bi", "tableau", "pandas",
-            "visualization", "machine learning"
-        ],
-        "required_skills": [
-            "SQL", "Statistics", "Python", "Data Visualization"
-        ],
+    "International Opportunities": {
+        "interest": "Abroad",
+        "skills": ["Communication", "Research", "Writing", "English"],
         "tips": [
-            "Practice analyzing real datasets.",
-            "Learn SQL and spreadsheet analysis.",
-            "Build data visualization projects.",
-            "Develop a portfolio of analytical work."
+            "Research international universities and opportunities.",
+            "Prepare relevant entrance or language examinations.",
+            "Build a strong academic profile."
+        ]
+    },
+    "Entrepreneurship": {
+        "interest": "Startup",
+        "skills": ["Leadership", "Communication", "Marketing", "Finance"],
+        "tips": [
+            "Identify a real-world problem.",
+            "Develop a minimum viable product.",
+            "Learn basic marketing and finance."
         ]
     }
 }
 
+RESOURCES = {
+    "Python": "https://www.py4e.com/",
+    "Java": "https://dev.java/learn/",
+    "SQL": "https://sqlbolt.com/",
+    "Git": "https://git-scm.com/doc",
+    "Excel": "https://support.microsoft.com/excel",
+    "Communication": "https://www.toastmasters.org/",
+    "Problem Solving": "https://www.hackerrank.com/",
+    "Data Analysis": "https://www.kaggle.com/learn",
+    "Leadership": "https://www.coursera.org/",
+    "Presentation": "https://support.microsoft.com/powerpoint"
+}
 
-# --------------------------------------------------
-# 2. TEXT PROCESSING
-# --------------------------------------------------
 
 def normalize(text):
-    """Normalize text for consistent keyword matching."""
-    return re.sub(r"\s+", " ", str(text).lower()).strip()
+    return re.sub(r"\s+", " ", str(text or "").lower()).strip()
 
 
-def clean_text(text):
-    """Keep text compatible with the standard FPDF font."""
-    return str(text).encode("latin-1", "replace").decode("latin-1")
+def has_term(text, term):
+    return bool(re.search(
+        r"(?<!\w)" + re.escape(term.lower()) + r"(?!\w)",
+        normalize(text)
+    ))
 
-
-# --------------------------------------------------
-# 3. RESUME ANALYSIS TOOL
-# --------------------------------------------------
 
 def analyze_resume(resume_text):
-    """
-    Extract useful information using transparent,
-    rule-based text analysis.
-    """
-
     text = normalize(resume_text)
+    all_skills = set()
 
-    detected_skills = [
-        "Python", "Java", "C++", "JavaScript", "HTML", "CSS",
-        "SQL", "Git", "React", "Machine Learning",
-        "Data Analysis", "Excel", "Power BI", "Communication",
-        "Leadership", "AWS", "Docker"
-    ]
+    for career in CAREERS.values():
+        all_skills.update(career["skills"])
 
-    found_skills = []
-
-    for skill in detected_skills:
-        if normalize(skill) in text:
-            found_skills.append(skill)
-
-    sections = {
-        "education": any(
-            word in text
-            for word in ["education", "degree", "bachelor", "b.tech", "b.e."]
-        ),
-        "projects": any(
-            word in text for word in ["project", "developed", "built"]
-        ),
-        "experience": any(
-            word in text
-            for word in ["experience", "internship", "intern", "employment"]
-        ),
-        "skills_section": "skills" in text,
-        "achievements": any(
-            word in text
-            for word in ["achievement", "award", "certification", "certified"]
-        )
-    }
-
-    return {
-        "skills": found_skills,
-        "sections": sections,
-        "word_count": len(text.split())
-    }
-
-
-# --------------------------------------------------
-# 4. RESUME GRADING TOOL
-# --------------------------------------------------
-
-def grade_resume(resume_text):
-    """
-    Calculate a deterministic heuristic completeness score.
-    This is not a validated professional resume assessment.
-    """
-
-    profile = analyze_resume(resume_text)
-    sections = profile["sections"]
-
-    score = 0
-
-    # Resume sections: 5 criteria, 1 point each.
-    score += sum(sections.values())
-
-    # Skills identified in the resume: maximum 2 points.
-    score += min(len(profile["skills"]) / 3, 2)
-
-    # Resume content length: maximum 2 points.
-    word_count = profile["word_count"]
-
-    if word_count >= 250:
-        score += 2
-    elif word_count >= 150:
-        score += 1.5
-    elif word_count >= 75:
-        score += 1
-    elif word_count >= 30:
-        score += 0.5
-
-    # Achievement evidence: maximum 1 point.
-    if sections["achievements"]:
-        score += 1
-
-    grade = round(min(score, 10), 1)
-
-    suggestions = []
-
-    if not sections["education"]:
-        suggestions.append("Add your education and qualifications.")
-
-    if not sections["skills_section"] or not profile["skills"]:
-        suggestions.append(
-            "Add a clearly organized skills section with relevant skills."
-        )
-
-    if not sections["projects"]:
-        suggestions.append(
-            "Include academic or personal projects with clear outcomes."
-        )
-
-    if not sections["experience"]:
-        suggestions.append(
-            "Include relevant internships, experience, or practical work."
-        )
-
-    if not sections["achievements"]:
-        suggestions.append(
-            "Include relevant certifications or measurable achievements."
-        )
-
-    if not suggestions:
-        suggestions.append(
-            "Review your resume for measurable achievements and clarity."
-        )
-
-    return grade, suggestions
-
-
-# --------------------------------------------------
-# 5. CAREER RECOMMENDATION AGENT
-# --------------------------------------------------
-
-def process_resume(resume_text, interests, skills):
-    """
-    Select a career using resume keywords, user interests,
-    and explicitly entered skills.
-    """
-
-    text = normalize(resume_text)
-    user_skills = normalize(skills)
-
-    combined_text = f"{text} {user_skills}"
-
-    scores = {}
-
-    for career, details in CAREER_DATA.items():
-        score = 0
-
-        # Explicit user interest receives greater weight.
-        for interest in interests:
-            if normalize(interest) in details["interests"]:
-                score += 3
-
-        # Match the profile against career-related keywords.
-        for keyword in details["keywords"]:
-            if normalize(keyword) in combined_text:
-                score += 1
-
-        # Match required skills already present in the profile.
-        for skill in details["required_skills"]:
-            if normalize(skill) in combined_text:
-                score += 1
-
-        scores[career] = score
-
-    # Stable ordering makes ties deterministic.
-    best_career = max(
-        scores,
-        key=lambda career: scores[career]
+    detected = sorted(
+        skill for skill in all_skills
+        if has_term(text, skill)
     )
 
-    # Avoid making a confident recommendation from no evidence.
-    if scores[best_career] == 0:
-        best_career = "Software Development"
+    sections = [
+        "education", "experience", "projects",
+        "skills", "achievements"
+    ]
 
-        recommendation = (
-            "There is not enough matching information for a confident "
-            "recommendation. Software Development is shown as a starting "
-            "option; provide more skills and interests for a better match."
-        )
-    else:
-        recommendation = (
-            f"Based on your resume, skills, and interests, "
-            f"{best_career} is a career option worth exploring."
-        )
-
-    career_data = CAREER_DATA[best_career]
-
-    # Identify missing skills using the user's supplied profile.
-    missing_skills = []
-
-    for skill in career_data["required_skills"]:
-        if normalize(skill) not in combined_text:
-            missing_skills.append(skill)
-
-    # Normalize career-fit scores for visualization.
-    maximum_score = max(scores.values())
-
-    if maximum_score == 0:
-        fit_scores = {
-            career: 0 for career in CAREER_DATA
-        }
-    else:
-        fit_scores = {
-            career: round(score / maximum_score * 100)
-            for career, score in scores.items()
-        }
+    found = [
+        section.title() for section in sections
+        if has_term(text, section)
+    ]
 
     return {
-        "path": recommendation,
-        "career": best_career,
-        "score": scores[best_career],
-        "scores": scores,
-        "fit_scores": fit_scores,
-        "tips": career_data["tips"],
-        "missing_skills": missing_skills
+        "word_count": len(resume_text.split()),
+        "skills": detected,
+        "sections_found": found,
+        "has_contact_info": bool(re.search(
+            r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}",
+            resume_text
+        ))
     }
 
 
-# --------------------------------------------------
-# 6. LEARNING RESOURCE TOOL
-# --------------------------------------------------
+def grade_resume(resume_text):
+    analysis = analyze_resume(resume_text)
+    score = 0.0
+    tips = []
 
-RESOURCE_URLS = {
-    "Python": "https://www.python.org/about/gettingstarted/",
-    "Data Structures": "https://www.geeksforgeeks.org/data-structures/",
-    "Git": "https://git-scm.com/doc",
-    "SQL": "https://www.w3schools.com/sql/",
-    "Communication": "https://www.coursera.org/",
-    "Business Analytics": "https://www.coursera.org/",
-    "Financial Fundamentals": "https://www.coursera.org/",
-    "Research Methodology": "https://www.coursera.org/",
-    "Technical Writing": "https://www.coursera.org/",
-    "Data Analysis": "https://www.kaggle.com/learn",
-    "Statistics": "https://www.khanacademy.org/math/statistics-probability",
-    "Data Visualization": "https://www.kaggle.com/learn",
-    "Aptitude": "https://www.indiabix.com/",
-    "Reasoning": "https://www.indiabix.com/",
-    "General Awareness": "https://www.coursera.org/"
-}
+    score += len(analysis["sections_found"])
+
+    for section in [
+        "Education", "Experience", "Projects",
+        "Skills", "Achievements"
+    ]:
+        if section not in analysis["sections_found"]:
+            tips.append(f"Consider adding a {section} section.")
+
+    score += min(len(analysis["skills"]) * 0.4, 2)
+
+    if len(analysis["skills"]) < 3:
+        tips.append("Mention more relevant skills.")
+
+    if analysis["has_contact_info"]:
+        score += 1
+    else:
+        tips.append("Include a professional email address.")
+
+    if analysis["word_count"] >= 150:
+        score += 1
+    else:
+        tips.append("Add more relevant resume details.")
+
+    if any(term in normalize(resume_text) for term in [
+        "improved", "achieved", "increased", "award", "%"
+    ]):
+        score += 1
+    else:
+        tips.append("Include measurable achievements.")
+
+    if not tips:
+        tips.append("Keep your resume updated and relevant.")
+
+    return round(min(score, 10), 1), tips
+
+
+def process_resume(resume_text, interests=None, skills=None):
+    interests = interests or []
+
+    if isinstance(interests, str):
+        interests = [interests]
+
+    if isinstance(skills, str):
+        skills = [
+            item.strip() for item in skills.split(",")
+            if item.strip()
+        ]
+    else:
+        skills = skills or []
+
+    analysis = analyze_resume(resume_text)
+
+    known_skills = {
+        normalize(skill)
+        for skill in analysis["skills"] + skills
+    }
+
+    fit_scores = {}
+    raw_scores = {}
+
+    for career_name, career in CAREERS.items():
+        required = career["skills"]
+
+        matched = sum(
+            normalize(skill) in known_skills
+            for skill in required
+        )
+
+        interest_match = any(
+            normalize(interest) == normalize(career["interest"])
+            for interest in interests
+        )
+
+        # 60% skill matching and 40% interest matching.
+        score = (
+            (matched / len(required)) * 60
+            + (40 if interest_match else 0)
+        )
+
+        raw_scores[career_name] = score
+        fit_scores[career_name] = round(score)
+
+    best = max(raw_scores, key=raw_scores.get)
+    selected = CAREERS[best]
+
+    missing = [
+        skill for skill in selected["skills"]
+        if normalize(skill) not in known_skills
+    ]
+
+    return {
+        "career": best,
+        "path": (
+            f"Based on your resume, skills and interests, "
+            f"{best} is your recommended career path."
+        ),
+        "score": round(raw_scores[best] / 100, 2),
+        "fit_scores": fit_scores,
+        "tips": selected["tips"],
+        "missing_skills": missing
+    }
 
 
 def recommend_courses(missing_skills):
-    """Map identified skill gaps to learning-resource URLs."""
-
-    recommendations = []
-
-    for skill in missing_skills:
-        recommendations.append({
+    return [
+        {
             "skill": skill,
-            "url": RESOURCE_URLS.get(
-                skill,
-                "https://www.coursera.org/"
+            "course": f"Learn {skill}",
+            "url": RESOURCES.get(
+                skill, "https://www.coursera.org/"
             )
-        })
+        }
+        for skill in missing_skills
+    ]
 
-    return recommendations
-
-
-# --------------------------------------------------
-# 7. PATHBOT CONVERSATIONAL TOOL
-# --------------------------------------------------
 
 def pathbot_answer(user_input, profile=None):
-    """
-    Answer common career questions using keyword rules
-    and optional analyzed student-profile information.
-    """
-
     question = normalize(user_input)
+    profile = profile or {}
+
+    career = profile.get("career", "")
+    missing = profile.get("missing_skills", [])
 
     if not question:
         return "Please enter a career-related question."
 
-    if profile is None:
-        profile = {}
-
-    career = profile.get("career", "")
-    skills = profile.get("skills", "")
-    interests = profile.get("interests", [])
-
-    if "your recommended career" in question or "my career" in question:
-        if career:
-            return (
-                f"Your current recommended career is {career}. "
-                f"Consider your interests, existing skills, and long-term "
-                f"goals before making a final decision."
-            )
-
+    if "internship" in question:
         return (
-            "Upload your resume and complete the career analysis "
-            "to receive a personalized career recommendation."
-        )
-
-    if "skill" in question or "learn" in question or "course" in question:
-        missing = profile.get("missing_skills", [])
-
-        if missing:
-            return (
-                "Based on your current career analysis, consider developing "
-                + ", ".join(missing)
-                + ". Prioritize the skills most relevant to your goal."
-            )
-
-        return (
-            "Choose a target career first, then compare its required skills "
-            "with your existing knowledge."
-        )
-
-    if "resume" in question or "cv" in question:
-        return (
-            "Improve your resume by highlighting relevant skills, projects, "
-            "education, experience, and measurable achievements."
+            "Look for internships related to your interests. "
+            "Build projects, improve your resume and check eligibility."
         )
 
     if "gate" in question:
         return (
-            "GATE may be suitable if you are interested in postgraduate "
-            "technical education or relevant technical recruitment. "
-            "Check the eligibility and requirements for your target."
+            "GATE is useful for eligible postgraduate and technical "
+            "opportunities. Check the official examination requirements."
         )
 
     if "mba" in question:
         return (
-            "An MBA may suit students interested in management, business, "
-            "consulting, or leadership. Consider your interests, entrance "
-            "examinations, and career goals."
+            "An MBA may suit students interested in business, "
+            "management and leadership."
         )
 
     if "job" in question or "placement" in question:
         return (
-            "For job preparation, strengthen relevant technical skills, "
-            "build projects, practice interviews, and apply for suitable "
-            "internships and entry-level positions."
+            "Prepare your resume, practise interviews, "
+            "develop relevant skills and apply for suitable roles."
         )
 
-    if "interest" in question or "career path" in question:
-        if career:
-            return (
-                f"Your current recommendation is {career}. "
-                f"Your selected interests are {', '.join(interests) if interests else 'not specified'}. "
-                "Compare this option with your preferences before deciding."
-            )
-
+    if "resume" in question or "cv" in question:
         return (
-            "Identify your strongest skills, preferred work, and long-term "
-            "goals. Your resume and interests can help narrow the options."
+            "Improve your resume by highlighting relevant skills, "
+            "projects, education and measurable achievements."
         )
+
+    if any(word in question for word in [
+        "skill", "course", "learn"
+    ]):
+        if missing:
+            return (
+                "Based on your profile, consider learning: "
+                + ", ".join(missing)
+            )
+        return "Choose your career goal and develop its required skills."
+
+    if any(phrase in question for phrase in [
+        "my career", "recommended career", "career path"
+    ]):
+        if career:
+            return f"Your current recommended career is {career}."
+        return "Complete your resume analysis to receive career guidance."
 
     if career:
         return (
-            f"Considering your current recommendation of {career} "
-            f"and the skills you provided ({skills or 'not specified'}), "
-            "start by identifying your immediate goal and the skills "
-            "needed to achieve it."
+            f"Your current recommendation is {career}. "
+            "Consider your skills, interests and long-term goals."
         )
 
     return (
-        "I can help with career selection, skill development, resumes, "
-        "GATE, MBA, placements, and learning plans. Please ask a more "
-        "specific question."
+        "I can help with resumes, career selection, GATE, MBA, "
+        "placements, internships and skill development."
     )
 
 
-# --------------------------------------------------
-# 8. PDF CAREER REPORT
-# --------------------------------------------------
-
 def generate_pdf(
-    name,
-    path,
-    interests,
-    skills,
-    match_percent,
-    tips,
-    grade,
-    grade_tips,
-    missing_skills=None
+    name, path, interests, skills, match_percent,
+    tips, grade, grade_tips, missing_skills=None
 ):
-    """Generate a downloadable career report."""
-
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
 
+    def safe(value):
+        return str(value).encode(
+            "latin-1", "replace"
+        ).decode("latin-1")
+
+    def line(value):
+        pdf.multi_cell(0, 8, safe(value))
+
     pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, clean_text("PathFinder AI Career Report"), ln=1)
+    line("PathFinder AI - Career Report")
+    pdf.ln(5)
 
     pdf.set_font("Arial", "", 11)
-    pdf.ln(4)
 
-    pdf.multi_cell(
-        0,
-        8,
-        clean_text(
-            f"Name: {name or 'Not provided'}\n"
-            f"Career Match Indicator: {match_percent}%\n"
-            f"Career Recommendation: {path}\n"
-            f"Interests: {', '.join(interests) if interests else 'Not provided'}\n"
-            f"Skills: {skills or 'Not provided'}"
-        )
-    )
+    line(f"Name: {name}")
+    line(f"Recommended Path: {path}")
+    line(f"Career Match: {match_percent}%")
+    line(f"Resume Score: {grade}/10")
+    line(f"Interests: {', '.join(interests)}")
+    line(f"Skills: {skills}")
 
-    pdf.ln(4)
-    pdf.set_font("Arial", "B", 13)
-    pdf.cell(0, 9, "Career Tips", ln=1)
-
+    pdf.ln(5)
+    pdf.set_font("Arial", "B", 12)
+    line("Career Tips")
     pdf.set_font("Arial", "", 11)
 
     for tip in tips:
-        pdf.multi_cell(0, 7, clean_text("- " + tip))
+        line("- " + tip)
 
-    pdf.ln(4)
-    pdf.set_font("Arial", "B", 13)
-    pdf.cell(0, 9, "Suggested Skill Development", ln=1)
-
+    pdf.ln(3)
+    pdf.set_font("Arial", "B", 12)
+    line("Skill Gap Suggestions")
     pdf.set_font("Arial", "", 11)
 
-    for skill in (missing_skills or []):
-        pdf.multi_cell(0, 7, clean_text("- " + skill))
+    for skill in missing_skills or []:
+        line("- Learn " + skill)
 
-    pdf.ln(4)
-    pdf.set_font("Arial", "B", 13)
-    pdf.cell(0, 9, "Resume Completeness Indicator", ln=1)
-
+    pdf.ln(3)
+    pdf.set_font("Arial", "B", 12)
+    line("Resume Improvement Tips")
     pdf.set_font("Arial", "", 11)
-    pdf.cell(0, 8, clean_text(f"Heuristic score: {grade}/10"), ln=1)
 
-    for suggestion in grade_tips:
-        pdf.multi_cell(0, 7, clean_text("- " + suggestion))
+    for tip in grade_tips:
+        line("- " + tip)
 
-    pdf.ln(5)
-    pdf.set_font("Arial", "I", 9)
-
-    pdf.multi_cell(
-        0,
-        6,
-        clean_text(
-            "Note: Career recommendations and scores are generated "
-            "using predefined rules. They are guidance indicators, "
-            "not guarantees of career suitability or employment."
-        )
-    )
-
-    safe_name = re.sub(
-        r"[^A-Za-z0-9_-]+",
-        "_",
-        str(name or "Student")
-    ).strip("_")
-
-    filename = f"{safe_name or 'Student'}_career_report.pdf"
-
-    pdf.output(filename)
-
-    return filename
-```
-ernships too."
-    else:
-        return "Explore your interests, list your priorities, and talk to mentors."
+    output = pdf.output(dest="S")
+    if isinstance(output, str):
+        return output.encode("latin-1")
+    return bytes(output)
