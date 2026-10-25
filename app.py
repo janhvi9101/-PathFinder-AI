@@ -19,33 +19,36 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-html, body, [class*="css"] {
-    background-color: #ffffff !important;
-    color: #111111 !important;
-    font-family: 'Segoe UI', sans-serif;
-}
-.stDownloadButton > button, .stButton > button {
+.stButton > button,
+.stDownloadButton > button {
     background-color: #52ab98;
     color: white;
     border-radius: 10px;
-    padding: 10px 20px;
-    border: none;
     font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<div style="background-color:#f5f5f5;padding:20px;
-border-radius:12px;text-align:center;">
-<h1 style="color:#2b6777;">
-🚀 PathFinder AI - Your Intelligent Career Assistant
-</h1>
-<p>Your personalized career guidance agent</p>
-</div>
-""", unsafe_allow_html=True)
+st.title("🚀 PathFinder AI")
+st.subheader("Your Intelligent Career Assistant")
+st.write(
+    "Analyze your resume, explore career opportunities "
+    "and receive personalized learning suggestions."
+)
 
 st.divider()
+
+if "resume_text" not in st.session_state:
+    st.session_state.resume_text = ""
+
+if "resume_id" not in st.session_state:
+    st.session_state.resume_id = None
+
+if "analysis" not in st.session_state:
+    st.session_state.analysis = None
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "📄 Upload Resume",
@@ -54,30 +57,27 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "💬 PathBot Chat"
 ])
 
-# Initialize session state.
-if "analysis" not in st.session_state:
-    st.session_state.analysis = None
-
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-# --------------------------------------------------
-# TAB 1: RESUME UPLOAD
-# --------------------------------------------------
+# -----------------------------------------
+# TAB 1 - UPLOAD RESUME
+# -----------------------------------------
 
 with tab1:
-    st.subheader("Upload Your Resume")
+    st.header("Upload Your Resume")
 
     uploaded_file = st.file_uploader(
-        "Upload your resume in PDF format",
-        type=["pdf"],
-        key="resume_upload"
+        "Upload PDF Resume",
+        type=["pdf"]
     )
 
     if uploaded_file is not None:
         try:
+            file_bytes = uploaded_file.getvalue()
+
+            import hashlib
+            file_id = hashlib.sha256(file_bytes).hexdigest()
+
             with fitz.open(
-                stream=uploaded_file.getvalue(),
+                stream=file_bytes,
                 filetype="pdf"
             ) as doc:
                 resume_text = "\n".join(
@@ -86,53 +86,60 @@ with tab1:
 
             if not resume_text.strip():
                 st.warning(
-                    "No selectable text was found. "
-                    "Please upload a text-based PDF resume."
+                    "No readable text found. Please upload "
+                    "a text-based PDF resume."
                 )
             else:
-                st.session_state.resume_text = resume_text
-
-                profile = analyze_resume(resume_text)
+                if st.session_state.resume_id != file_id:
+                    st.session_state.resume_id = file_id
+                    st.session_state.resume_text = resume_text
+                    st.session_state.analysis = None
+                    st.session_state.chat_history = []
 
                 st.success("Resume uploaded successfully!")
 
-                st.write(
-                    f"**Words detected:** {profile['word_count']}"
-                )
+                profile = analyze_resume(resume_text)
 
                 st.write(
-                    "**Recognized skills:**",
-                    ", ".join(profile["skills"])
-                    if profile["skills"]
-                    else "No recognized skills found."
+                    "**Words detected:**",
+                    profile["word_count"]
+                )
+
+                st.write("**Detected Skills:**")
+
+                if profile["skills"]:
+                    st.write(", ".join(profile["skills"]))
+                else:
+                    st.info("No predefined skills detected.")
+
+                st.info(
+                    "Now visit the Career Suggestion tab."
                 )
 
         except Exception as error:
-            st.error(
-                f"Unable to read this PDF. Please try another file. "
-                f"Details: {error}"
-            )
+            st.error(f"PDF processing error: {error}")
 
-# --------------------------------------------------
-# TAB 2: CAREER SUGGESTION
-# --------------------------------------------------
+# -----------------------------------------
+# TAB 2 - CAREER SUGGESTION
+# -----------------------------------------
 
 with tab2:
-    st.subheader("Personalized Career Analysis")
+    st.header("Personalized Career Recommendation")
 
-    if not st.session_state.get("resume_text"):
-        st.info("Upload your resume in the first tab to continue.")
+    if not st.session_state.resume_text:
+        st.warning("Please upload your resume first.")
 
     else:
         with st.form("career_form"):
-            name = st.text_input("Enter your name")
+
+            name = st.text_input("Enter Your Name")
 
             linkedin = st.text_input(
-                "Enter your LinkedIn profile URL (optional)"
+                "LinkedIn Profile URL (Optional)"
             )
 
             interests = st.multiselect(
-                "Select your interests",
+                "Select Your Interests",
                 [
                     "Software",
                     "MBA",
@@ -144,7 +151,7 @@ with tab2:
             )
 
             skills = st.text_input(
-                "Enter your skills, separated by commas"
+                "Enter Additional Skills (comma separated)"
             )
 
             submitted = st.form_submit_button(
@@ -152,17 +159,15 @@ with tab2:
             )
 
         if submitted:
-            if not interests and not skills.strip():
+
+            if not interests:
                 st.warning(
-                    "Select at least one interest or enter your skills "
-                    "to receive a more personalized recommendation."
+                    "Please select at least one interest."
                 )
 
             else:
-                with st.spinner("Analyzing your career profile..."):
+                try:
                     resume_text = st.session_state.resume_text
-
-                    resume_profile = analyze_resume(resume_text)
 
                     result = process_resume(
                         resume_text,
@@ -170,138 +175,131 @@ with tab2:
                         skills
                     )
 
-                    grade, grade_tips = grade_resume(resume_text)
+                    grade, grade_tips = grade_resume(
+                        resume_text
+                    )
 
                     courses = recommend_courses(
                         result["missing_skills"]
                     )
 
+                    match_percent = round(
+                        result["score"] * 100
+                    )
+
                     st.session_state.analysis = {
-                        "name": name,
+                        "name": name.strip() or "Student",
                         "linkedin": linkedin,
                         "interests": interests,
                         "skills": skills,
-                        "path": result["path"],
-                        "career": result["career"],
-                        "score": result["score"],
-                        "fit_scores": result["fit_scores"],
-                        "tips": result["tips"],
-                        "missing_skills": result["missing_skills"],
-                        "courses": courses,
-                        "match_percent": result["fit_scores"][
-                            result["career"]
-                        ],
+                        "result": result,
                         "grade": grade,
                         "grade_tips": grade_tips,
-                        "resume_profile": resume_profile
+                        "courses": courses,
+                        "match_percent": match_percent
                     }
 
-                    st.session_state.chat_history = []
+                    st.success("Career analysis completed!")
+
+                except Exception as error:
+                    st.error(f"Analysis error: {error}")
 
         data = st.session_state.analysis
 
         if data:
-            st.markdown("### 📌 Recommended Career Path")
-            st.success(data["path"])
 
-            st.caption(
-                "This recommendation uses predefined rules matching "
-                "your interests, skills, and resume keywords."
+            result = data["result"]
+
+            st.markdown("### 📌 Recommended Path")
+            st.success(result["path"])
+
+            st.metric(
+                "Career Match Score",
+                f"{data['match_percent']}%"
             )
 
             st.markdown("### 🧠 Career Tips")
 
-            for tip in data["tips"]:
-                st.markdown(f"- {tip}")
+            for tip in result["tips"]:
+                st.write("•", tip)
 
             st.markdown("### 🔧 Skill Gap Suggestions")
 
-            if data["missing_skills"]:
+            if data["courses"]:
                 for course in data["courses"]:
                     st.markdown(
                         f"- Learn **{course['skill']}** — "
-                        f"[Learning resource]({course['url']})"
+                        f"[Free Learning Resource]({course['url']})"
                     )
             else:
                 st.success(
-                    "No skill gaps were identified by the current rules."
+                    "No skill gaps detected by the current rules."
                 )
+
+            st.markdown("### 🎖️ Learner Badge")
 
             grade = data["grade"]
 
             if grade >= 9:
-                st.success("🏆 Career Guru: Excellent completeness score!")
+                st.success("🏆 Career Guru")
             elif grade >= 7:
-                st.success("🎖️ Resume Hero: Good completeness score!")
+                st.success("🎖️ Resume Hero")
             elif grade >= 5:
-                st.info("📘 Learner Badge: Keep improving your resume!")
+                st.info("📘 Learner Badge")
             else:
-                st.warning("🌱 New Explorer: Your resume needs more detail.")
+                st.warning("🌱 New Explorer")
 
-# --------------------------------------------------
-# TAB 3: VISUALIZATION AND REPORT
-# --------------------------------------------------
+# -----------------------------------------
+# TAB 3 - VISUALIZATION
+# -----------------------------------------
 
 with tab3:
-    st.subheader("Resume Grading Report")
+    st.header("Resume Grading Report")
 
     data = st.session_state.analysis
 
-    if not data:
-        st.info(
-            "Upload a resume and complete your career analysis "
-            "to view your report."
-        )
+    if data is None:
+        st.info("Complete your career analysis first.")
 
     else:
+        result = data["result"]
+        grade = data["grade"]
+
         st.metric(
-            "Resume Completeness Score",
-            f"{data['grade']} / 10"
+            "Resume Score",
+            f"{grade} / 10"
         )
 
-        st.caption(
-            "This score is a rule-based completeness indicator, "
-            "not a professional resume evaluation."
-        )
+        fig = go.Figure(data=[
+            go.Pie(
+                labels=["Score", "Remaining"],
+                values=[grade, max(0, 10 - grade)],
+                hole=0.6
+            )
+        ])
 
-        fig = go.Figure(
-            data=[
-                go.Pie(
-                    labels=["Score", "Remaining"],
-                    values=[
-                        data["grade"],
-                        max(0, 10 - data["grade"])
-                    ],
-                    hole=0.6
-                )
-            ]
-        )
+        fig.update_layout(height=320)
 
-        fig.update_layout(
-            showlegend=True,
-            margin=dict(t=20, b=20, l=20, r=20),
-            height=320
+        st.plotly_chart(
+            fig,
+            use_container_width=True
         )
-
-        st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("### 📊 Career Fit by Domain")
 
-        categories = list(data["fit_scores"].keys())
+        fit_scores = result["fit_scores"]
 
-        values = [
-            data["fit_scores"][category]
-            for category in categories
-        ]
+        categories = list(fit_scores.keys())
+        values = list(fit_scores.values())
 
         radar = go.Figure()
 
         radar.add_trace(
             go.Scatterpolar(
-                r=values,
-                theta=categories,
+                r=values + [values[0]],
+                theta=categories + [categories[0]],
                 fill="toself",
-                name="Profile Match"
+                name="Career Fit"
             )
         )
 
@@ -315,99 +313,102 @@ with tab3:
             showlegend=False
         )
 
-        st.plotly_chart(radar, use_container_width=True)
+        st.plotly_chart(
+            radar,
+            use_container_width=True
+        )
 
         st.caption(
-            "Career-fit values are relative keyword and interest matches. "
-            "They are not probabilities of career success."
+            "Scores are based on predefined skill and interest "
+            "matching rules, not random values or employment probabilities."
         )
+
+        st.markdown("### Resume Improvement Suggestions")
+
+        for tip in data["grade_tips"]:
+            st.write("•", tip)
 
         st.markdown("### 📥 Download Career Report")
 
         try:
-            filename = generate_pdf(
+            pdf_bytes = generate_pdf(
                 data["name"],
-                data["path"],
+                result["path"],
                 data["interests"],
                 data["skills"],
                 data["match_percent"],
-                data["tips"],
+                result["tips"],
                 data["grade"],
                 data["grade_tips"],
-                data["missing_skills"]
+                result["missing_skills"]
             )
 
-            with open(filename, "rb") as pdf_file:
-                st.download_button(
-                    "Download Career Report (PDF)",
-                    data=pdf_file.read(),
-                    file_name=filename,
-                    mime="application/pdf"
-                )
+            st.download_button(
+                label="Download Career Report (PDF)",
+                data=pdf_bytes,
+                file_name="PathFinder_Career_Report.pdf",
+                mime="application/pdf"
+            )
 
         except Exception as error:
-            st.error(f"Could not generate the PDF report: {error}")
+            st.error(f"Report generation error: {error}")
 
-# --------------------------------------------------
-# TAB 4: PATHBOT CHAT
-# --------------------------------------------------
+# -----------------------------------------
+# TAB 4 - PATHBOT
+# -----------------------------------------
 
 with tab4:
-    st.subheader("💬 Ask PathBot for Career Advice")
+    st.header("💬 Ask PathBot for Career Advice")
 
     st.write(
-        "Ask questions about career choices, skills, GATE, MBA, "
-        "placements, or your recommended career."
+        "Ask about GATE, MBA, internships, placements, "
+        "resumes, courses or career recommendations."
     )
 
     data = st.session_state.analysis
 
+    profile = {}
+
     if data:
-        st.caption(
-            f"Current career recommendation: {data['career']}"
-        )
-    else:
-        st.info(
-            "You can ask general questions now. Complete your career "
-            "analysis for profile-aware responses."
-        )
+        profile = {
+            "career": data["result"]["career"],
+            "skills": data["skills"],
+            "interests": data["interests"],
+            "missing_skills": data["result"]["missing_skills"]
+        }
 
-    with st.form("pathbot_form", clear_on_submit=True):
+    with st.form("chat_form", clear_on_submit=True):
+
         user_question = st.text_input(
-            "Enter your career question",
-            placeholder="Should I prepare for GATE or apply for jobs?"
+            "Enter your career question"
         )
 
-        ask_button = st.form_submit_button("Ask PathBot")
+        ask = st.form_submit_button("Ask PathBot")
 
-    if ask_button and user_question.strip():
-        career_profile = None
-
-        if data:
-            career_profile = {
-                "career": data["career"],
-                "skills": data["skills"],
-                "interests": data["interests"],
-                "missing_skills": data["missing_skills"]
-            }
+    if ask and user_question.strip():
 
         answer = pathbot_answer(
             user_question,
-            career_profile
+            profile
         )
 
-        st.session_state.chat_history.append(
-            {
-                "question": user_question,
-                "answer": answer
-            }
-        )
+        st.session_state.chat_history.append({
+            "question": user_question,
+            "answer": answer
+        })
 
     for chat in st.session_state.chat_history:
-        st.markdown(f"**You:** {chat['question']}")
-        st.success(f"🤖 PathBot: {chat['answer']}")
+
+        st.markdown(
+            f"**You:** {chat['question']}"
+        )
+
+        st.success(
+            f"🤖 PathBot: {chat['answer']}"
+        )
 
     if st.session_state.chat_history:
+
         chat_text = "\n\n".join(
             f"Q: {chat['question']}\nA: {chat['answer']}"
             for chat in st.session_state.chat_history
@@ -416,8 +417,6 @@ with tab4:
         st.download_button(
             "Download PathBot Conversation",
             data=chat_text,
-            file_name="career_chat.txt",
+            file_name="PathBot_Chat.txt",
             mime="text/plain"
         )
-
-
