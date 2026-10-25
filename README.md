@@ -32,17 +32,19 @@ PathFinder AI aims to address this problem by providing personalized career guid
 
 ## 🌐 Live App
 
-🚀 [Click here to try PathFinder AI live](https://janhvi9101-pathfinder-ai.streamlit.app/)
+🚀 [Click here to try PathFinder AI live]([(https://janhvi9101-pathfinder-ai.streamlit.app/)])
 
 ---
 
 ## 🛠 Built With
 
-- **Python** & **Streamlit** – Web application framework  
-- **Plotly** – For interactive charts  
-- **PyMuPDF (fitz)** – Extract resume content  
-- **fpdf** – Generate custom PDF reports  
-- **Custom AI logic** – Rule-based suggestions + chatbot
+-Python & Streamlit – Core programming language and interactive web application
+-Plotly – Interactive career-fit and resume-score charts
+-PyMuPDF (fitz) – Extract text from uploaded PDF resumes
+-FPDF – Generate downloadable career guidance reports
+-Custom AI Logic – Rule-based career recommendations, skill-gap analysis, and PathBot chatbot
+-GitHub – Source code management and version control
+-Streamlit Community Cloud – Live application deployment
 
 ---
 
